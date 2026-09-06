@@ -1,0 +1,14 @@
+{
+  "checkpointId": "cp_12",
+  "timestamp": "2026-09-06T11:45:00Z",
+  "goal": "Build a reliable Stripe payment system.",
+  "completedRequirements": ["Stripe checkout", "Webhook handling"],
+  "incompleteRequirements": ["Refund handling", "Email receipts"],
+  "decisions": ["Redis is used for webhook idempotency."],
+  "risks": ["Duplicate webhook events."],
+  "filesChanged": ["src/payment/service.ts"],
+  "testsRun": ["payment.test.ts", "webhook.test.ts"],
+  "testResults": ["passing"],
+  "agent": "test-agent",
+  "sessionSummary": "Implemented checkout and webhooks."
+}
