@@ -1,8 +1,9 @@
 import { databricksConfig, databricksFetch } from "./client";
 import { z } from "zod";
+import type { SanitizedCheckpoint } from "@/lib/types";
 const report = z.object({ intentCoverage: z.number().min(0).max(100).nullable(), completed: z.array(z.string()), unfinished: z.array(z.string()), risks: z.array(z.string()), affectedComponents: z.array(z.string()), recommendedTests: z.array(z.string()), nextAction: z.string(), confidence: z.number().min(0).max(1), evidence: z.array(z.string()) });
 export type ModelReport = z.infer<typeof report>;
-export async function reasonWithDatabricks(evidence: unknown): Promise<{ result?: ModelReport; status?: string }> {
+export async function reasonWithDatabricks(evidence: { checkpoint: SanitizedCheckpoint | null; intent: unknown; instructions: string }): Promise<{ result?: ModelReport; status?: string }> {
   const { config, missing } = databricksConfig();
   if (!config) return { status: `Databricks connection not configured. Missing: ${missing.join(", ")}` };
   try {

@@ -1,12 +1,14 @@
 import type { Checkpoint, Evidence, GraphEvidence, ImpactReport, IntentReport } from "./types";
+import { getContextStatus } from "./privacy";
 
 const checkpointEvidence = (checkpoint: Checkpoint, claim: string): Evidence => ({ source: "entire-checkpoint", checkpointId: checkpoint.checkpointId, claim });
 export function analyzeIntent(checkpoint: Checkpoint | undefined): IntentReport {
-  if (!checkpoint) return { intentCoverage: null, originalGoal: null, completed: [], unfinished: [], decisions: [], risks: [], confidence: 0, evidence: [], status: "Insufficient evidence: no Entire checkpoint has been imported." };
+  if (!checkpoint) return { intentCoverage: null, originalGoal: null, completed: [], unfinished: [], decisions: [], risks: [], confidence: 0, evidence: [], contextStatus: "INSUFFICIENT", unavailableFields: ["checkpoint"], status: "Insufficient evidence: no Entire checkpoint has been imported." };
   const completed = checkpoint.completedRequirements || []; const unfinished = checkpoint.incompleteRequirements || [];
   const denominator = completed.length + unfinished.length;
   const evidence = [checkpoint.goal && checkpointEvidence(checkpoint, `Goal recorded in checkpoint: ${checkpoint.goal}`), ...completed.map((item) => checkpointEvidence(checkpoint, `Completed: ${item}`)), ...unfinished.map((item) => checkpointEvidence(checkpoint, `Unfinished: ${item}`))].filter(Boolean) as Evidence[];
-  return { intentCoverage: denominator ? Math.round((completed.length / denominator) * 100) : null, originalGoal: checkpoint.goal, completed, unfinished, decisions: checkpoint.decisions || [], risks: checkpoint.risks || [], confidence: evidence.length ? 0.9 : 0.2, evidence, status: denominator ? undefined : "Insufficient evidence: checkpoint does not enumerate requirements." };
+  const contextStatus = getContextStatus(checkpoint);
+  return { intentCoverage: denominator ? Math.round((completed.length / denominator) * 100) : null, originalGoal: checkpoint.goal, completed, unfinished, decisions: checkpoint.decisions || [], risks: checkpoint.risks || [], confidence: contextStatus === "COMPLETE" ? 0.9 : contextStatus === "PARTIAL" ? 0.55 : 0.2, evidence, contextStatus, unavailableFields: checkpoint.unavailableFields, status: contextStatus === "INSUFFICIENT" ? "Insufficient evidence: checkpoint does not enumerate implementation intent." : contextStatus === "PARTIAL" ? "Some checkpoint information is unavailable. Results are based only on available evidence." : undefined };
 }
 export function analyzeImpact(target: string, relationships: GraphEvidence[], checkpoint?: Checkpoint): ImpactReport {
   if (!relationships.length) return { risk: "UNKNOWN", affectedFiles: [], relationships, recommendedTests: checkpoint?.testsRun || [], reason: "Insufficient evidence: Entire Graph returned no relationships.", evidence: [], status: "Insufficient evidence" };

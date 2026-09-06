@@ -1,0 +1,12 @@
+{
+  "checkpointId": "cp_redacted",
+  "timestamp": "2026-09-06T12:00:00Z",
+  "goal": "Complete secure refund handling.",
+  "completedRequirements": ["Stripe checkout"],
+  "incompleteRequirements": ["Refund handling"],
+  "decisions": null,
+  "transcript": null,
+  "sessionSummary": "Customer token: [REDACTED]",
+  "filesChanged": ["src/payment/refunds.ts"],
+  "testsRun": ["refund.test.ts"]
+}

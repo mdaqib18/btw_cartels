@@ -13,9 +13,13 @@ function toEvidence(value: unknown, fallback: string): GraphEvidence[] {
   }));
 }
 export async function analyzeGraphImpact(target: string): Promise<{ evidence: GraphEvidence[]; status?: string }> {
+  const configured = process.env.ENTIRE_GRAPH_IMPACT_COMMAND;
+  if (!configured) return { evidence: [], status: "Entire Graph impact command is not configured. Set ENTIRE_GRAPH_IMPACT_COMMAND from your installed Entire CLI documentation." };
   try {
-    const cli = process.env.ENTIRE_CLI_PATH || "entire";
-    const { stdout } = await run(cli, ["graph", "impact", target, "--json"], { timeout: 12_000, maxBuffer: 2_000_000 });
+    const command = JSON.parse(configured) as unknown;
+    if (!Array.isArray(command) || !command.length || !command.every((part) => typeof part === "string")) throw new Error("ENTIRE_GRAPH_IMPACT_COMMAND must be a JSON array of executable and arguments.");
+    const [executable, ...args] = command as string[];
+    const { stdout } = await run(executable, args.map((arg) => arg.replaceAll("{target}", target)), { timeout: 12_000, maxBuffer: 2_000_000 });
     return { evidence: toEvidence(JSON.parse(stdout), target) };
   } catch (error) {
     return { evidence: [], status: `Entire Graph unavailable: ${error instanceof Error ? error.message : "unknown error"}` };
